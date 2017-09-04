@@ -1,0 +1,48 @@
+grammar org.example.domainmodel.Domainmodel with
+                                      org.eclipse.xtext.common.Terminals
+ 
+generate domainmodel "http://www.example.org/domainmodel/Domainmodel"
+ 
+Domainmodel:
+	(elements+=tag)*
+    (elements+=Type)+
+    ;
+    
+    
+Type hidden(WS, ML_COMMENT, SL_COMMENT ):
+	blog += blog |  articles += articles | comment = SL_COMMENT  
+;
+    
+blog:
+	name ='blog' '{'
+	 feature = Feature
+	'}'
+;
+
+articles:
+	name = 'articles' '{'
+	 feature = Feature
+	'}'
+;
+Feature:
+    'title=' name= NAMEFORMATE (','
+	'date=' date = DATEFORMATE)?  (','
+	'tags=' '[' (tag0+= [tag] (',' tag1+= [tag])*)? ']')?
+;
+//tagvalue:
+//	
+//;
+
+tag:
+	'tag' name = ID
+;
+
+terminal ID: '^'?('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
+terminal NAMEFORMATE:
+	'^'?('a'..'z'|'A'..'Z'|'-') ('a'..'z'|'A'..'Z'|'-'|'0'..'9')*;
+terminal DATEFORMATE:
+	('0'..'2')('0'..'9')('0'..'9')('0'..'9') '-' ('0'..'1')('0'..'9') '-' ('0'..'3')('0'..'9')
+;
+    
+  
+    

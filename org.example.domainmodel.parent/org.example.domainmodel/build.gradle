@@ -1,0 +1,123 @@
+dependencies {
+	testCompile "org.eclipse.xtext:org.eclipse.xtext.junit4:${xtextVersion}"
+	testCompile "org.eclipse.xtext:org.eclipse.xtext.xbase.junit:${xtextVersion}"
+	compile "org.eclipse.xtext:org.eclipse.xtext:${xtextVersion}"
+	compile "org.eclipse.xtext:org.eclipse.xtext.xbase:${xtextVersion}"
+//	compile "org.eclipse.xtend:org.eclipse.xtend.core:${xtextVersion}"
+}
+configurations {
+	mwe2 {
+		extendsFrom compile
+	}
+}
+
+dependencies {
+	mwe2 "org.eclipse.emf:org.eclipse.emf.mwe2.launch:2.8.3"
+	mwe2 "org.eclipse.xtext:org.eclipse.xtext.xtext.generator:${xtextVersion}"
+}
+
+task generateXtextLanguage(type: JavaExec) {
+	main = 'org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher'
+	classpath = configurations.mwe2
+	inputs.file "src/main/java/org/example/domainmodel/GenerateDomainmodel.mwe2"
+	inputs.file "src/main/java/org/example/domainmodel/Domainmodel.xtext"
+	outputs.dir "src/main/xtext-gen"
+	args += "src/main/java/org/example/domainmodel/GenerateDomainmodel.mwe2"
+	args += "-p"
+	args += "rootPath=/${projectDir}/.."
+}
+
+generateXtext.dependsOn(generateXtextLanguage)
+clean.dependsOn(cleanGenerateXtextLanguage)
+eclipse.classpath.plusConfigurations += [configurations.mwe2]
+
+
+// generating code
+// ../gradlew compileModel -Pmodel=build/test.dmodel
+task compileModel(dependsOn: 'classes', type: JavaExec) {
+	main = 'org.example.domainmodel.generator.Main'	
+	classpath = sourceSets.main.runtimeClasspath
+	args model
+}
+
+	
+
+
+def BLOG = "blog"
+def ARTICLES = "articles"
+def NAME1 = "2016-06-01-my-trip"
+def NAME2 = "2016-06-01-my-project"
+def MY_TRIP = "my-trip"
+def MY_PROJECT = "my-project"
+//generating code and execute publish method to publish
+//../gradlew publish -Pmodel=test.dmodel -Ptitle=my-project
+/*
+task publish(dependsOn:'compileModel',type:Copy) <<{
+	
+	def filename = null;
+	def dir = null
+	
+	if(MY_TRIP.equals(title)){
+		filename = NAME1
+		dir = BLOG
+	}else if(MY_PROJECT.equals(title)){
+		filename = NAME2
+		dir = ARTICLES
+	}
+	
+	doLast{
+		tasks.deleteFile.execute()
+	}
+	from 'src-gen/'
+	into "website/jekyll-website/_posts/${dir}"
+	include "${filename}.md"
+	task deleteFile(type:Delete){
+		delete "src-gen/${filename}.md"
+	}
+	
+}
+*/
+
+//compileModel.finalizedBy publish
+
+
+//generating code and execute publish method to publish
+//../gradlew publish -Pmodel=test.dmodel -Ptitle=my-project
+//../gradlew getAllFiles -Ptitle=my-trip dependsOn:'compileModel',
+task publish(dependsOn:'compileModel',type:Copy) {
+	def testname = title.replace("-"," ")
+	println testname
+	def filename = null
+	def dir = null
+	def fileStr = ""
+	
+	FileTree tree = fileTree(dir: 'src-gen/')
+
+	tree.each { File file ->
+		fileStr = file.getText()
+		def ss = fileStr.split("\n")
+		def i = ss[2].indexOf(": ")
+//		println ss[2].substring(i+3,ss[2].length()-1)
+		if(ss[2].substring((i+3),ss[2].length()-1).equalsIgnoreCase(testname)){
+			//what we want is the file
+			filename = "2016-06-01-"+title
+			def j= ss[3].indexOf(": ")
+			println "haha"+ss[3].substring(j+2)
+			dir = ss[3].substring(j+2)
+		}
+//		println ss[3]		
+		
+
+	}
+//	compileModel.finalizedBy publish
+	from 'src-gen/'
+	into "website/jekyll-website/_posts/${dir}"
+	include "${filename}.md"
+	doLast{
+		tasks.deleteFile.execute()
+	}
+
+	task deleteFile(type:Delete){ delete "src-gen/${filename}.md" }
+}
+
+//publish.shouldRunAfter compileModel

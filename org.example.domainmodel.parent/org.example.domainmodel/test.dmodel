@@ -1,0 +1,15 @@
+tag hobbies
+tag fun
+tag work
+blog {
+  title=my-trip,
+  date=2016-06-01,
+  tags=[fun,hobbies]
+}
+blog {
+  title=my-last-reading
+}
+articles {
+  title=my-project,
+  tags=[work]
+}
